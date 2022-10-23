@@ -1,1 +1,2 @@
-import {authAtom} from "./auth";
+import { authAtom } from "./auth";
+import { profileAtom } from "./profile";

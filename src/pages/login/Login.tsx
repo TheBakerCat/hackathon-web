@@ -1,98 +1,107 @@
 import { useNavigate } from "react-router-dom";
-import {
-  CircularProgress,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@mui/material";
 import { LoginBox } from "./components/LoginBox";
 import { LoginCard } from "./components/LoginCard";
-import { PatternFormat } from "react-number-format";
-import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as Yup from "yup";
-import { useEffect, useState } from "react";
+import { FirstLoginStep } from "./components/FirstLoginStep";
+import { ReactNode, useEffect, useState } from "react";
+import { Step, StepLabel, Stepper } from "@mui/material";
+import { SecondLoginStep } from "./components/SecondLoginStep/SecondLoginStep";
+import { ThirdLoginStep } from "./components/ThirdLoginStep";
+import { motion } from "framer-motion";
+import { authAtom } from "../../states/auth";
+import { useRecoilValue } from "recoil";
+import parseJwt from "../../utils/parseJWT";
 
-export const Login = () => {
+const Login = () => {
   let navigate = useNavigate();
-  const [loading, setLoading] = useState<boolean>(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [skipped, setSkipped] = useState(new Set<number>());
+  const [registered, setRegistered] = useState<boolean>(true);
+  const [steps, setSteps] = useState<string[]>([
+    "Введите номер телефона",
+    "Введите код подтверждения",
+  ]);
+  const auth = useRecoilValue(authAtom);
 
-  const LoginForm = Yup.object().shape({
-    phone_number: Yup.string()
-      .min(10, "Phone number should be 10 digits")
-      .required("Phone number is required"),
-  });
+  const isStepSkipped = (step: number) => {
+    return skipped.has(step);
+  };
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    formState,
-    formState: { isValidating },
-  } = useForm({
-    mode: "onChange",
-    resolver: yupResolver(LoginForm),
-  });
+  const handleLogin = () => {
+    const parsedJWT = parseJwt(auth!);
+    localStorage.setItem("token", auth!);
+    if (parsedJWT.admin) {
+      navigate("/admin");
+    } else {
+      navigate("/dashboard");
+    }
+  };
 
-  const data = watch();
+  const handleNext = () => {
+    if (activeStep + 1 === steps.length) {
+      handleLogin();
+    } else {
+      let newSkipped = skipped;
+      if (isStepSkipped(activeStep)) {
+        newSkipped = new Set(newSkipped.values());
+        newSkipped.delete(activeStep);
+      }
+
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      setSkipped(newSkipped);
+    }
+  };
 
   useEffect(() => {
-    console.log(formState.isValid);
-    if (formState.isValid && !isValidating) {
-      console.log(data);
-      setLoading(true);
-    }
-  }, [formState, data, isValidating]);
+    !registered && setSteps((prev) => [...prev, "Введите своё имя"]);
+  }, [registered]);
 
   return (
     <LoginBox>
-      <LoginCard elevation={20}>
-        <Typography variant={"h5"}>Вход</Typography>
-        <Typography variant={"subtitle1"}>
-          Введите номер телефона. На него поступит СМС с кодом для авторизации.
-        </Typography>
-
-        <form
-          onSubmit={handleSubmit(
-            (e) => console.log(e),
-            (e) => console.log(e)
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{
+          duration: 0.5,
+          delay: 0.1,
+          ease: [0, 0.71, 0.2, 1.01],
+        }}
+      >
+        <LoginCard sx={{ overflow: "hidden" }} elevation={20}>
+          {activeStep !== 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ y: [-20, 0], opacity: 1 }}
+              transition={{ type: "spring", stiffness: 100 }}
+            >
+              <Stepper activeStep={activeStep} alternativeLabel>
+                {steps.map((label, index) => {
+                  const stepProps: { completed?: boolean } = {};
+                  const labelProps: {
+                    optional?: ReactNode;
+                  } = {};
+                  if (isStepSkipped(index)) {
+                    stepProps.completed = false;
+                  }
+                  return (
+                    <Step key={label} {...stepProps}>
+                      <StepLabel {...labelProps}>{label}</StepLabel>
+                    </Step>
+                  );
+                })}
+              </Stepper>
+            </motion.div>
           )}
-        >
-          <Controller
-            render={({ field: { ref, onChange, value }, fieldState }) => (
-              <PatternFormat
-                format={"(###) ###-####"}
-                prefix={"+7"}
-                mask="_"
-                customInput={TextField}
-                onValueChange={(v) => {
-                  onChange(Number(v.value));
-                }}
-                label={"Введите номер телефона"}
-                sx={{ marginTop: "20px" }}
-                variant={"outlined"}
-                value={value}
-                inputRef={ref}
-                fullWidth
-                disabled={loading}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">+7</InputAdornment>
-                  ),
-                  endAdornment: loading ? (
-                    <InputAdornment position="end">
-                      <CircularProgress size={30}/>
-                    </InputAdornment>
-                  ) : null,
-                }}
-                placeholder={"(___) ___-____"}
-              />
-            )}
-            name={"phone_number"}
-            control={control}
-          />
-        </form>
-      </LoginCard>
+          {activeStep === 0 && (
+            <FirstLoginStep
+              handleNext={handleNext}
+              setRegistered={setRegistered}
+            />
+          )}
+          {activeStep === 1 && <SecondLoginStep handleNext={handleNext} />}
+          {activeStep === 2 && <ThirdLoginStep handleNext={handleNext} />}
+        </LoginCard>
+      </motion.div>
     </LoginBox>
   );
 };
+export default Login;
