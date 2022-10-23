@@ -6,14 +6,13 @@ import useInterval from "../../../../utils/useInterval";
 import { motion } from "framer-motion";
 import { confirmPost } from "../../../../networking/authorize";
 import { profileAtom } from "../../../../states/profile";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import {useRecoilState, useRecoilValue} from "recoil";
 import { authAtom } from "../../../../states/auth";
 
 export const SecondLoginStep = (props: { handleNext: Function }) => {
   const [timer, setTimer] = useState(60);
   const profile = useRecoilValue(profileAtom);
   useInterval(() => setTimer((prev) => prev - 1), timer > 0 ? 1000 : null);
-  const setAuth = useSetRecoilState(authAtom);
   const [error, setError] = useState<string | null>(null);
 
   const resetTimer = function () {
@@ -25,8 +24,8 @@ export const SecondLoginStep = (props: { handleNext: Function }) => {
   const handleCompleted = (code: string) => {
     confirmPost(profile.phone, code)
       .then((r) => {
-        setAuth(r.data);
-        props.handleNext();
+        localStorage.setItem("token", r.data);
+        props.handleNext()
       })
       .catch((e) => {
         console.log(e);
@@ -34,6 +33,7 @@ export const SecondLoginStep = (props: { handleNext: Function }) => {
           e.response?.status === 404 &&
           e.response?.data?.message !== "Invalid code"
         ) {
+          localStorage.setItem("token", e.response?.data);
           props.handleNext();
         } else {
           setError(e.response?.data?.message);
@@ -62,9 +62,14 @@ export const SecondLoginStep = (props: { handleNext: Function }) => {
             length={4}
             onCompleted={handleCompleted}
           />
-          <Typography variant={"body1"} sx={{ color: "text.secondary" }}>
-            {error}
-          </Typography>
+          {error && (
+            <Typography
+              variant={"body1"}
+              sx={{ color: "error.main", marginTop: "10px" }}
+            >
+              {error}
+            </Typography>
+          )}
         </Box>
         <Typography variant={"subtitle1"}>
           Введите код из СМС для продолжения

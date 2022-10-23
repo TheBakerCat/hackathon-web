@@ -8,7 +8,7 @@ import { SecondLoginStep } from "./components/SecondLoginStep/SecondLoginStep";
 import { ThirdLoginStep } from "./components/ThirdLoginStep";
 import { motion } from "framer-motion";
 import { authAtom } from "../../states/auth";
-import { useRecoilValue } from "recoil";
+import {useRecoilState} from "recoil";
 import parseJwt from "../../utils/parseJWT";
 
 const Login = () => {
@@ -20,15 +20,17 @@ const Login = () => {
     "Введите номер телефона",
     "Введите код подтверждения",
   ]);
-  const auth = useRecoilValue(authAtom);
+  const [auth, setAuth] = useRecoilState(authAtom);
 
   const isStepSkipped = (step: number) => {
     return skipped.has(step);
   };
 
   const handleLogin = () => {
-    const parsedJWT = parseJwt(auth!);
-    localStorage.setItem("token", auth!);
+    let token = localStorage.getItem("token");
+    console.log(token);
+    setAuth(token)
+    const parsedJWT = parseJwt(token!);
     if (parsedJWT.admin) {
       navigate("/admin");
     } else {

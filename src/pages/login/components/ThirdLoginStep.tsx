@@ -21,7 +21,6 @@ export const ThirdLoginStep = (props: { handleNext: Function }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [canContinue, setCanContinue] = useState<boolean>(false);
   const profile = useRecoilValue(profileAtom);
-  const setAuth = useSetRecoilState(authAtom);
 
   const RegistrationForm = Yup.object().shape({
     user_name: Yup.string().max(64).required(),
@@ -30,8 +29,7 @@ export const ThirdLoginStep = (props: { handleNext: Function }) => {
   const handleClick = (data: FieldValues) => {
     finishPost(profile.phone, data.user_name)
       .then((res) => {
-        console.log(res);
-        setAuth(res.data);
+        localStorage.setItem("token", res.data);
         props.handleNext();
       })
       .catch((err) => {

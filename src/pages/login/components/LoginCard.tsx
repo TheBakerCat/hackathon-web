@@ -1,6 +1,7 @@
 import { Paper, PaperProps, styled } from "@mui/material";
 
-export const LoginCard = styled(Paper)<PaperProps>(({ theme }) => ({
+
+export const LoginCard = styled(Paper)<PaperProps>(({  }) => ({
   display: "flex",
   padding: "20px",
   minWidth: "500px",
@@ -8,4 +9,5 @@ export const LoginCard = styled(Paper)<PaperProps>(({ theme }) => ({
   minHeight: "200px",
   justifyContent: "space-around",
   flexDirection: "column",
+
 }));

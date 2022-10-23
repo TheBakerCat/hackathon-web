@@ -2,6 +2,8 @@
   display: flex;
   justify-content: center;
   align-content: center;
+  flex-direction: column;
+  text-align: center;
   margin: 20px 0;
   --ReactInputVerificationCode-itemWidth: 2.5rem;
   --ReactInputVerificationCode-itemHeight: 3.5rem;

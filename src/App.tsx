@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import "./App.css";
 import { Route, Routes } from "react-router-dom";
 const Login = lazy(() => import("./pages/login/Login"));
-const Main = lazy(() => import("./pages/home/Home"));
 const Admin = lazy(() => import("./pages/admin/Admin"));
 const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const NoMatch = lazy(() => import("./pages/nomatch/NoMatch"));
@@ -13,8 +12,10 @@ const UserChecks = lazy(
   () => import("./pages/dashboard/pages/UserChecks/UserChecks")
 );
 const Check = lazy(() => import("./pages/dashboard/pages/Check/Check"));
+const Revisions = lazy(() => import("./pages/admin/pages/Revisions/Revisions"));
 import { AnimatePresence } from "framer-motion";
 import FallbackBackdrop from "./components/FallbackBackdrop";
+import { RequireAuth } from "./components/RequireAuth";
 
 function App() {
   return (
@@ -33,7 +34,9 @@ function App() {
           path="dashboard"
           element={
             <Suspense fallback={<FallbackBackdrop />}>
-              <Dashboard />
+              <RequireAuth to={"/login"} admin={false}>
+                <Dashboard />
+              </RequireAuth>
             </Suspense>
           }
         >
@@ -63,7 +66,18 @@ function App() {
             />
           </Route>
         </Route>
-        <Route path="/admin" element={<div>Admin</div>} />
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<FallbackBackdrop />}>
+              <RequireAuth to={"/login"} admin={true}>
+                <Admin />
+              </RequireAuth>
+            </Suspense>
+          }
+        >
+        <Route path={"revisions"} index element={<Revisions/>}/>
+        </Route>
         <Route
           path="*"
           element={
