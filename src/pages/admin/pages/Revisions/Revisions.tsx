@@ -33,16 +33,16 @@ const Revisions = () => {
     }, []);
 
     const columns = [
-        {field: 'name', headerName: 'Название'},
-        {field: 'form.name', headerName: 'Название шаблона'},
-        {field: 'shop_address', headerName: 'Адрес магазина'},
-        {field: 'expire_date', headerName: 'Дата окончания'},
-        {field: 'active', headerName: 'Активность'},
+        {field: 'name', headerName: 'Название', flex: 3},
+        {field: 'form.name', headerName: 'Название шаблона', flex: 3},
+        {field: 'shop_address', headerName: 'Адрес магазина', flex: 3},
+        {field: 'expire_date', headerName: 'Дата окончания', flex: 2},
+        {field: 'active', headerName: 'Активность', flex: 1},
 
     ]
 
     return (
-        <Box sx={{width: "100%", height: "100%"}}>
+        <Box sx={{width: "100%", height: "80%", display: "flex"}}>
             <DataGrid columns={columns} rows={revisions}/>
         </Box>
     )
